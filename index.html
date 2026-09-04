@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Tren Parenting - Indonesia</title>
+</head>
+<body>
+  <h2>Kueri Terpopuler</h2>
+  <ul id="top-queries"></ul>
+
+  <h2>Kueri yang Makin Populer</h2>
+  <ul id="rising-queries"></ul>
+
+  <script>
+    fetch('data.json')
+      .then(res => res.json())
+      .then(data => {
+        const topList = document.getElementById('top-queries');
+        const risingList = document.getElementById('rising-queries');
+
+        data.top.forEach(item => {
+          topList.innerHTML += `<li>${item.query} (Skor: ${item.value})</li>`;
+        });
+
+        data.rising.forEach(item => {
+          risingList.innerHTML += `<li>${item.query} (+${item.value}%)</li>`;
+        });
+      });
+  </script>
+</body>
+</html>
