@@ -1,25 +1,20 @@
-name: Fetch Google Trends & Deploy to GitHub Pages
+name: Deploy Google Trends to GitHub Pages
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # Berjalan otomatis setiap 6 jam
+    - cron: '0 */6 * * *' # Otomatis berjalan setiap 6 jam
   workflow_dispatch: # Akses tombol manual di tab Actions
 
-# Mengatur izin token GitHub untuk dipublikasikan ke GitHub Pages
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Menghindari bentrokan deployment jika ada beberapa proses bersamaan
 concurrency:
   group: 'pages'
   cancel-in-progress: true
 
 jobs:
-  # -------------------------------------------------------------
-  # JOB 1: BUILD (Fetch Data & Prepare Artifact)
-  # -------------------------------------------------------------
   build:
     runs-on: ubuntu-latest
     steps:
@@ -42,12 +37,8 @@ jobs:
       - name: Upload Artifact for Deployment
         uses: actions/upload-pages-artifact@v3
         with:
-          # Mengunggah seluruh root direktori (termasuk index.html & data.json)
           path: '.'
 
-  # -------------------------------------------------------------
-  # JOB 2: DEPLOY (Publish to GitHub Pages)
-  # -------------------------------------------------------------
   deploy:
     environment:
       name: github-pages
