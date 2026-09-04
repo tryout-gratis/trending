@@ -2,56 +2,49 @@ import json
 import pandas as pd
 from pytrends.request import TrendReq
 
-# Inisialisasi pytrends
-pytrends = TrendReq(hl='id-ID', tz=420)
+# Set proxy ke Workers Anda
+PROXIES = [
+    'https://nama-worker-anda.subdomain.workers.dev/?url='
+]
 
-# Diberikan input 8 jenis frase tren penelusuran
+pytrends = TrendReq(
+    hl='id-ID', 
+    tz=420, 
+    retries=3, 
+    backoff_factor=1,
+    proxies=PROXIES
+)
+
 keywords = ["untuk", "yang", "ini", "itu", "cara", "apa", "dan", "dalam"]
-
-# Build payload sesuai kriteria URL (now 7-d dan geo ID)
-pytrends.build_payload(kw_list=keywords, timeframe='now 7-d', geo='ID')
-
-# Ambil data kueri terkait untuk semua kata kunci
-related_queries = pytrends.related_queries()
 
 all_top_frames = []
 all_rising_frames = []
 
-# Ambil data kueri terpopuler dan makin populer dari masing-masing kata kunci
-for kw in keywords:
-    kw_data = related_queries.get(kw, {})
+# Google Trends hanya menerima maksimal 5 keywords per payload.
+# Kita bagi keyword menjadi kelompok 4 item.
+chunk_size = 4
+for i in range(0, len(keywords), chunk_size):
+    kw_chunk = keywords[i:i + chunk_size]
     
-    top_df = kw_data.get('top')
-    if top_df is not None and not top_df.empty:
-        all_top_frames.append(top_df)
+    try:
+        pytrends.build_payload(kw_list=kw_chunk, timeframe='now 7-d', geo='ID')
+        related_queries = pytrends.related_queries()
         
-    rising_df = kw_data.get('rising')
-    if rising_df is not None and not rising_df.empty:
-        all_rising_frames.append(rising_df)
+        for kw in kw_chunk:
+            kw_data = related_queries.get(kw, {})
+            top_df = kw_data.get('top')
+            if top_df is not None and not top_df.empty:
+                all_top_frames.append(top_df)
+                
+            rising_df = kw_data.get('rising')
+            if rising_df is not None and not rising_df.empty:
+                all_rising_frames.append(rising_df)
+    except Exception as e:
+        print(f"Gagal mengambil batch {kw_chunk}: {e}")
 
-# --- Olah Data Kueri Terpopuler ---
-if all_top_frames:
-    combined_top = pd.concat(all_top_frames, ignore_index=True)
-    # Urutkan berdasarkan nilai minat penelusuran tertinggi dan hapus duplikat kueri
-    combined_top = combined_top.sort_values(by='value', ascending=False).drop_duplicates(subset=['query'])
-    top_10 = combined_top.head(10)['query'].tolist()
-else:
-    top_10 = []
-
-# --- Olah Data Kueri yang Makin Populer ---
-if all_rising_frames:
-    combined_rising = pd.concat(all_rising_frames, ignore_index=True)
-    # Urutkan berdasarkan persentase kenaikan tertinggi dan hapus duplikat kueri
-    combined_rising = combined_rising.sort_values(by='value', ascending=False).drop_duplicates(subset=['query'])
-    rising_10 = combined_rising.head(10)['query'].tolist()
-else:
-    rising_10 = []
-
-# Simpan hasil berupa daftar nama kueri saja ke data.json
-result = {
-    "top": top_10,
-    "rising": rising_10
-}
+# Process & Output ke data.json
+top_10 = pd.concat(all_top_frames, ignore_index=True).sort_values(by='value', ascending=False).drop_duplicates(subset=['query']).head(10)['query'].tolist() if all_top_frames else []
+rising_10 = pd.concat(all_rising_frames, ignore_index=True).sort_values(by='value', ascending=False).drop_duplicates(subset=['query']).head(10)['query'].tolist() if all_rising_frames else []
 
 with open('data.json', 'w', encoding='utf-8') as f:
-    json.dump(result, f, ensure_ascii=False, indent=2)
+    json.dump({"top": top_10, "rising": rising_10}, f, ensure_ascii=False, indent=2)
