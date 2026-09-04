@@ -2,14 +2,14 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Tren Parenting - Indonesia</title>
+  <title>Tren Penelusuran Google</title>
 </head>
 <body>
-  <h2>Kueri Terpopuler</h2>
-  <ul id="top-queries"></ul>
+  <h2>10 Kueri Terpopuler</h2>
+  <ol id="top-queries"></ol>
 
-  <h2>Kueri yang Makin Populer</h2>
-  <ul id="rising-queries"></ul>
+  <h2>10 Kueri yang Makin Populer</h2>
+  <ol id="rising-queries"></ol>
 
   <script>
     fetch('data.json')
@@ -18,14 +18,17 @@
         const topList = document.getElementById('top-queries');
         const risingList = document.getElementById('rising-queries');
 
-        data.top.forEach(item => {
-          topList.innerHTML += `<li>${item.query} (Skor: ${item.value})</li>`;
+        // Tampilkan 10 Kueri Terpopuler
+        data.top.forEach(query => {
+          topList.innerHTML += `<li>${query}</li>`;
         });
 
-        data.rising.forEach(item => {
-          risingList.innerHTML += `<li>${item.query} (+${item.value}%)</li>`;
+        // Tampilkan 10 Kueri yang Makin Populer
+        data.rising.forEach(query => {
+          risingList.innerHTML += `<li>${query}</li>`;
         });
-      });
+      })
+      .catch(err => console.error('Gagal memuat data:', err));
   </script>
 </body>
 </html>
