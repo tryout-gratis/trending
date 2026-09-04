@@ -4,7 +4,7 @@ from pytrends.request import TrendReq
 
 # Set proxy ke Workers Anda
 PROXIES = [
-    'https://nama-worker-anda.subdomain.workers.dev/?url='
+    'https://trending.minixsrv.workers.dev/?url='
 ]
 
 pytrends = TrendReq(
