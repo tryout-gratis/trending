@@ -1,0 +1,31 @@
+name: Update Google Trends Data
+
+on:
+  schedule:
+    - cron: '0 */6 * * *' # Berjalan otomatis setiap 6 jam
+  workflow_dispatch: # Memungkinkan trigger manual dari GitHub UI
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: pip install pytrends pandas
+
+      - name: Fetch Trends Data
+        run: python fetch_trends.py
+
+      - name: Commit & Push Changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update Google Trends Data" && git push)
